@@ -1,7 +1,8 @@
 const std = @import("std");
 const Mode = std.builtin.Mode;
+const Builder = std.build.Builder;
 
-pub fn build(b: *std.build.Builder) !void {
+pub fn build(b: *Builder) !void {
     // config
     b.setPreferredReleaseMode(Mode.ReleaseSmall);
     b.is_release = true;
@@ -48,6 +49,14 @@ pub fn build(b: *std.build.Builder) !void {
         path,
     });
     b.default_step.dependOn(&sstrip_step.step);
+
+    // echo binary size
+    const report_step = b.addSystemCommand(&.{
+        "wc",
+        "-c",
+        path,
+    });
+    b.default_step.dependOn(&report_step.step);
 
     // run
     const run_step = b.step("run", "Run the app");

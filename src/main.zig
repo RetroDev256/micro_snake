@@ -1,25 +1,23 @@
 const linux = @import("std").os.linux;
 const snek_io = @import("snek_io.zig");
-const Direction = snek_io.Direction;
-
 const Snake = @import("snake.zig").Snake(80, 25);
 
 pub export fn _start() callconv(.Naked) noreturn {
     main();
 }
 
+const delay: linux.timespec = .{
+    .tv_sec = 0,
+    .tv_nsec = 0x5000000,
+};
+
 fn main() noreturn {
     @setAlignStack(16);
-    snek_io.initTerm();
     while (true) {
-        var default_dir: Direction = .Right;
+        snek_io.cbreakMode();
         var snek = Snake.new();
-        while (!snek.move(default_dir)) {
-            const ns: usize = 0x5000000 - snek.length * 0x2000;
-            var delay = .{ .tv_sec = 0, .tv_nsec = @intCast(isize, ns) };
+        while (snek.move()) {
             _ = linux.nanosleep(&delay, null);
-            snek.drawArena();
-            snek_io.get_dir(&default_dir);
         }
     }
 }
