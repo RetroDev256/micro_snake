@@ -68,7 +68,8 @@ pub fn Snake(comptime dim_x: comptime_int, comptime dim_y: comptime_int) type {
             snek_io.usizeConv(self.length - 2, score_ctr_ptr);
             for (screen) |*elem, i| {
                 if (self.grid[i] > 0) {
-                    elem.* = '@';
+                    const offset = @truncate(u8, self.grid[i] % 4);
+                    elem.* = offset + '#';
                 }
             }
             screen[self.foodLCG] = '+';
