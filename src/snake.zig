@@ -57,18 +57,12 @@ pub fn Snake(comptime dim_x: comptime_int, comptime dim_y: comptime_int) type {
 
         // render the entire game (slower, but fewer bytes)
         pub fn drawArena(self: *@This()) void {
-            var screen: [area]u8 = ("." ** area).*;
-            screen[0] = 'S';
-            screen[1] = 'c';
-            screen[2] = 'o';
-            screen[3] = 'r';
-            screen[4] = 'e';
-            screen[5] = ':';
-            const score_ctr_ptr = @ptrCast([*]u8, screen[7..]);
-            snek_io.usizeConv(self.length - 2, score_ctr_ptr);
+            var screen: [area]u8 = undefined;
             for (screen) |*elem, i| {
                 if (self.grid[i] > 0) {
                     elem.* = '@';
+                } else {
+                    elem.* = '.';
                 }
             }
             screen[self.foodLCG] = '+';
