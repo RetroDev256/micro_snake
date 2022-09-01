@@ -12,13 +12,13 @@ fn main() noreturn {
     @setAlignStack(16);
     snek_io.initTerm();
     while (true) {
-        Snake.prepareArena();
         var default_dir: Direction = .Right;
         var snek = Snake.new();
         while (!snek.move(default_dir)) {
             const ns: usize = 0x5000000 - snek.length * 0x2000;
             var delay = .{ .tv_sec = 0, .tv_nsec = @intCast(isize, ns) };
             _ = linux.nanosleep(&delay, null);
+            snek.drawArena();
             snek_io.get_dir(&default_dir);
         }
     }

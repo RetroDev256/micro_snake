@@ -31,7 +31,6 @@ pub fn Snake(comptime dim_x: comptime_int, comptime dim_y: comptime_int) type {
             const old_pos: usize = self.segments[self.head];
             if (!wallHit(old_pos, dir)) {
                 const new_pos: usize = moveHead(old_pos, dir);
-                printSymbol('@', new_pos);
                 if (!self.occupied[new_pos]) {
                     const new_head: usize = (self.head + 1) % area;
                     self.head = new_head;
@@ -40,12 +39,10 @@ pub fn Snake(comptime dim_x: comptime_int, comptime dim_y: comptime_int) type {
                     if (new_pos == self.food % area) {
                         self.updateFood();
                         self.length += 1;
-                        self.printScore();
                     } else {
                         const tail_ind: usize = (self.head + area) - self.length;
                         const tail_pos: usize = self.segments[tail_ind % area];
                         self.occupied[tail_pos] = false;
-                        printSymbol('.', tail_pos);
                     }
                     return false;
                 }
@@ -53,27 +50,27 @@ pub fn Snake(comptime dim_x: comptime_int, comptime dim_y: comptime_int) type {
             return true;
         }
 
-        // prepare the screen for snake
-        pub inline fn prepareArena() void {
+        // render the entire game (slower, but fewer bytes)
+        pub inline fn drawArena(self: *@This()) void {
+            var screen: [area]u8 = ("." ** area).*;
+            self.renderScore(@ptrCast([*]u8, &screen));
+            screen[self.food % area] = '+';
+            // draw the snake
+            var i: usize = 0;
+            while (i < self.length) : (i += 1) {
+                const index: usize = (self.head + (area - i)) % area;
+                const location: usize = self.segments[index];
+                screen[location] = '@';
+            }
             var y: usize = 0;
             while (y < dim_y) : (y += 1) {
-                snek_io.move(0, y);
-                var x: usize = 0;
-                while (x < dim_x) : (x += 1) {
-                    _ = linux.write(1, @ptrCast([*]u8, "."), 1);
-                }
+                snek_io.moveY(y);
+                _ = linux.write(1, @ptrCast([*]u8, screen[y * dim_x ..]), dim_x);
             }
         }
 
-        // print out something on the screen
-        fn printSymbol(symbol: u8, loc: usize) void {
-            snek_io.move(loc % dim_x, loc / dim_x);
-            _ = linux.write(1, @ptrCast([*]u8, &symbol), 1);
-        }
-
-        // print out the score in the bottom padding
-        inline fn printScore(self: *@This()) void {
-            var buf: [18]u8 = undefined;
+        // render score in the screen buffer
+        inline fn renderScore(self: *@This(), buf: [*]u8) void {
             buf[0] = 'S';
             buf[1] = 'c';
             buf[2] = 'o'; // for some reason doing initialization
@@ -83,8 +80,6 @@ pub fn Snake(comptime dim_x: comptime_int, comptime dim_y: comptime_int) type {
             buf[6] = ' ';
             buf[17] = ' ';
             snek_io.usizeConv(self.length - 2, buf[7..17]);
-            snek_io.move(0, 0);
-            _ = linux.write(1, @ptrCast([*]u8, &buf), 18);
         }
 
         // update the position of the food, simple LCG
@@ -93,7 +88,6 @@ pub fn Snake(comptime dim_x: comptime_int, comptime dim_y: comptime_int) type {
                 self.food *%= 0x9581f42d;
                 self.food +%= 0x54057b7f;
             }
-            printSymbol('+', self.food % area);
         }
 
         // change position of index based on direction

@@ -9,9 +9,9 @@ pub inline fn initTerm() void {
     _ = linux.tcgetattr(0, &termios);
     termios.lflag &= ~(linux.ICANON | linux.ECHO);
     termios.cc[linux.V.MIN] = 0; // nonblocking input
-    //termios.cc[linux.V.TIME] = 0; // no time delay
-    _ = linux.tcsetattr(0, .FLUSH, &termios);
-    _ = linux.write(1, "\x1B[2J\x1B[?25l", 10);
+    termios.cc[linux.V.TIME] = 0; // no time delay for awaiting input
+    _ = linux.tcsetattr(0, .FLUSH, &termios); // apply attributes
+    _ = linux.write(1, "\x1B[2J\x1B[?25l", 10); // clear screen & turn off cursor
 }
 
 // get a character if there is one to be read
@@ -28,16 +28,16 @@ pub inline fn get_dir(last: *Direction) void {
     }
 }
 
-// move terminal cursor position to a certain location
-pub fn move(x: usize, y: usize) void {
-    var buf: [24]u8 = undefined;
+// move terminal cursor position to a certain row
+pub fn moveY(y: usize) void {
+    var buf: [15]u8 = undefined;
     buf[0] = '\x1B';
     buf[1] = '[';
     buf[12] = ';';
-    buf[23] = 'H';
+    buf[13] = '0';
+    buf[14] = 'H';
     usizeConv(y + 1, buf[2..12]);
-    usizeConv(x + 1, buf[13..23]);
-    _ = linux.write(1, @ptrCast([*]u8, &buf), 24);
+    _ = linux.write(1, @ptrCast([*]u8, &buf), 15);
 }
 
 // convert usize to string representation
