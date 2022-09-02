@@ -14,8 +14,9 @@ const delay: linux.timespec = .{
 fn main() noreturn {
     @setAlignStack(16);
     snek_io.cbreakMode();
+    var snek: Snake = undefined;
     while (true) {
-        var snek = Snake.new();
+        snek.init();
         while (snek.move()) {
             _ = linux.nanosleep(&delay, null);
         }
