@@ -15,7 +15,7 @@ pub fn build(b: *Builder) !void {
     // build
     const exe = b.addExecutable("micro_snake", "src/main.zig");
     exe.strip = true;
-    exe.headerpad_size = 16;
+    exe.headerpad_size = 0;
     exe.link_gc_sections = true;
     exe.dead_strip_dylibs = true;
     exe.disable_sanitize_c = true;
