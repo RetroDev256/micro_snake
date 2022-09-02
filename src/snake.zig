@@ -65,15 +65,13 @@ pub const Snake = struct {
         }
     }
     // render the entire game (slower, but fewer bytes)
-    pub fn drawArena(self: *@This()) void {
+    fn drawArena(self: *@This()) void {
         var screen: [area]u8 = ("." ** area).*;
-        screen[0] = 'S';
-        screen[1] = 'c';
-        screen[2] = 'o';
-        screen[3] = 'r';
-        screen[4] = 'e';
-        screen[5] = ':';
-        const score_ctr_ptr = @ptrCast([*]u8, screen[7..]);
+        screen[0] = 'L';
+        screen[1] = 'e';
+        screen[2] = 'n';
+        screen[3] = ':';
+        const score_ctr_ptr = @ptrCast([*]u8, screen[5..]);
         snek_io.u32Conv(self.length - 1, score_ctr_ptr);
         for (screen) |*elem, i| {
             if (self.grid[i] > 0) {

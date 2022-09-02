@@ -6,10 +6,7 @@ pub export fn _start() callconv(.Naked) noreturn {
     main();
 }
 
-const delay: linux.timespec = .{
-    .tv_sec = 0,
-    .tv_nsec = 0x5000000,
-};
+const delay: linux.timespec = .{ .tv_sec = 0, .tv_nsec = 0x5000000 };
 
 fn main() noreturn {
     @setAlignStack(16);
