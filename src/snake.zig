@@ -1,6 +1,7 @@
 const linux = @import("std").os.linux;
-const snek_io = @import("snek_io.zig");
-const Direction = snek_io.Direction;
+const dir = @import("dir.zig");
+const u32conv = @import("u32conv.zig");
+const Direction = dir.Direction;
 
 // length per food consumed
 const food_add: u32 = 4;
@@ -32,7 +33,7 @@ pub const Snake = struct {
     }
     // returns true if a collision occurs
     pub fn move(self: *@This()) bool {
-        snek_io.get_dir(&self.dir);
+        dir.get_dir(&self.dir);
         self.updateGrid();
         if (!self.wallHit()) {
             const head_diff: u32 = switch (self.dir) {
@@ -72,7 +73,7 @@ pub const Snake = struct {
         screen[2] = 'n';
         screen[3] = ':';
         const score_ctr_ptr = @ptrCast([*]u8, screen[5..]);
-        snek_io.u32Conv(self.length - 1, score_ctr_ptr);
+        u32conv.u32Conv(self.length - 1, score_ctr_ptr);
         for (screen) |*elem, i| {
             if (self.grid[i] > 0) {
                 const offset = @truncate(u8, self.grid[i] % 4);

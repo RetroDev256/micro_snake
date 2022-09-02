@@ -1,11 +1,11 @@
 const linux = @import("std").os.linux;
-const snek_io = @import("snek_io.zig");
+const cbreak = @import("cbreak.zig");
 const Snake = @import("snake.zig").Snake;
 
 const delay: linux.timespec = .{ .tv_sec = 0, .tv_nsec = 0x5000000 };
 
 pub export fn _start() noreturn {
-    snek_io.cbreakMode();
+    cbreak.cbreakMode();
     var snek: Snake = undefined;
     while (true) {
         snek.init();
