@@ -3,7 +3,7 @@ const snek_io = @import("snek_io.zig");
 const Direction = snek_io.Direction;
 
 // length per food consumed
-const food_add: u32 = 1;
+const food_add: u32 = 4;
 // width of terminal
 const dim_x: u32 = 80;
 // height of terminal
