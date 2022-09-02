@@ -23,6 +23,7 @@ pub const Snake = struct {
     length: u32,
     foodLCG: u32,
     grid: [area]u32,
+
     // initialize the snake and environment
     pub fn init(self: *@This()) void {
         self.head = snake_pos;
@@ -31,6 +32,7 @@ pub const Snake = struct {
         self.foodLCG = food_pos;
         self.grid = .{0} ** area;
     }
+
     // returns true if a collision occurs
     pub fn move(self: *@This()) bool {
         dir.get_dir(&self.dir);
@@ -59,12 +61,14 @@ pub const Snake = struct {
         }
         return false;
     }
+
     // updates the grid
     fn updateGrid(self: *@This()) void {
         for (self.grid) |*cell| {
             cell.* -|= 1;
         }
     }
+
     // render the entire game (slower, but fewer bytes)
     fn drawArena(self: *@This()) void {
         var screen: [area]u8 = ("." ** area).*;
@@ -83,6 +87,7 @@ pub const Snake = struct {
         screen[self.foodLCG] = '+';
         drawBuffer(&screen);
     }
+
     // flushes the buffer to the screen, adding
     // newlines and positioning at top right corner
     fn drawBuffer(buf: *[area]u8) void {
@@ -94,6 +99,7 @@ pub const Snake = struct {
             _ = linux.write(1, "\n", 1);
         }
     }
+
     // returns true if it will crash into a wall
     fn wallHit(self: *@This()) bool {
         return switch (self.dir) {
