@@ -21,7 +21,7 @@ pub const Snake = struct {
     head: u32,
     dir: Direction,
     length: u32,
-    foodLCG: u32,
+    foodPRNG: u32,
     grid: [area]u32,
 
     // initialize the snake and environment
@@ -29,7 +29,7 @@ pub const Snake = struct {
         self.head = snake_pos;
         self.dir = .Right;
         self.length = 1;
-        self.foodLCG = food_pos;
+        self.foodPRNG = food_pos;
         self.grid = .{0} ** area;
     }
 
@@ -47,13 +47,12 @@ pub const Snake = struct {
             self.head = (self.head + head_diff) % area;
             if (self.grid[self.head] == 0) {
                 self.grid[self.head] = self.length;
-                if (self.head == self.foodLCG) {
+                if (self.head == self.foodPRNG) {
                     self.length += food_add;
-                    while (self.grid[self.foodLCG % area] > 0) {
-                        self.foodLCG *%= 0x9581f42d;
-                        self.foodLCG +%= 0x54057b7f;
+                    while (self.grid[self.foodPRNG] > 0) {
+                        self.foodPRNG +%= 1824274789;
+                        self.foodPRNG %= area;
                     }
-                    self.foodLCG %= area;
                 }
                 self.drawArena();
                 return true;
@@ -80,11 +79,10 @@ pub const Snake = struct {
         u32conv.u32Conv(self.length - 1, score_ctr_ptr);
         for (screen) |*elem, i| {
             if (self.grid[i] > 0) {
-                const offset = @truncate(u8, self.grid[i] % 4);
-                elem.* = offset + '#';
+                elem.* = '@';
             }
         }
-        screen[self.foodLCG] = '+';
+        screen[self.foodPRNG] = '+';
         drawBuffer(&screen);
     }
 
