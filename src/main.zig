@@ -1,6 +1,6 @@
 const linux = @import("std").os.linux;
 const snek_io = @import("snek_io.zig");
-const Snake = @import("snake.zig").Snake(80, 25);
+const Snake = @import("snake.zig").Snake;
 
 pub export fn _start() callconv(.Naked) noreturn {
     main();
