@@ -17,8 +17,8 @@ pub export fn _start() callconv(.C) noreturn {
     const old_termios = io.enable_raw();
     defer io.set_term(old_termios);
 
-    const dim_x: u32 = 80; // width of terminal
-    const dim_y: u32 = 25; // height of terminal
+    const dim_x = 80; // width of terminal
+    const dim_y = 25; // height of terminal
 
     var screen: [dim_x * dim_y]u8 = undefined;
     @memset(&screen, ' ');
@@ -50,11 +50,10 @@ fn banner(comptime dim_x: usize, comptime dim_y: usize, screen: []u8) void {
 }
 
 // for when the snake dies
-fn deathAnim(comptime dim_x: usize, comptime dim_y: usize, screen: []u8) void {
-    for (0..dim_x * dim_y * 2) |i| {
-        _ = i; // autofix
+fn deathAnim(comptime dim_x: u32, comptime dim_y: u32, screen: []u8) void {
+    for (0..dim_x * dim_y * 2) |_| {
         const rand = tools.next();
-        const place: u32 = @intCast(rand % (dim_x * dim_y));
+        const place: u32 = rand % (dim_x * dim_y);
         const char: u32 = (rand % 64) + 32;
         screen[place] = @truncate(char);
         io.drawBuffer(dim_x, dim_y, screen);
