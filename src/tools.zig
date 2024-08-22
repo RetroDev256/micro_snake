@@ -10,10 +10,12 @@ pub fn next() u32 {
 }
 
 // convert u32 to string representation
-pub fn u32Conv(val: u32, buf: []u8) void {
+pub fn u32Conv(val: u32, noalias buf: []u8) void {
     var conv: u32 = val;
-    for (0..10) |i| {
-        buf[9 - i] = '0' + @as(u8, @intCast(conv % 10));
-        conv = conv / 10;
+    var i: usize = 0;
+    while (conv > 0) : (i += 1) {
+        const digit: u8 = @intCast(conv % 10);
+        buf[buf.len - (i + 1)] = '0' + digit;
+        conv /= 10;
     }
 }

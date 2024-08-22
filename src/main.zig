@@ -51,7 +51,8 @@ fn banner(comptime dim_x: usize, comptime dim_y: usize, screen: []u8) void {
 
 // for when the snake dies
 fn deathAnim(comptime dim_x: usize, comptime dim_y: usize, screen: []u8) void {
-    for (0..dim_x * dim_y * 2) |_| {
+    for (0..dim_x * dim_y * 2) |i| {
+        _ = i; // autofix
         const rand = tools.next();
         const place: u32 = @intCast(rand % (dim_x * dim_y));
         const char: u32 = (rand % 64) + 32;

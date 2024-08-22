@@ -15,7 +15,7 @@ pub fn Snake(
         dir: Direction,
         length: u32,
         food: u32,
-        grid: []u32,
+        grid: *[area]u32,
 
         // initialize the snake and environment
         pub fn init(grid: *[area]u32) Self {
@@ -50,12 +50,13 @@ pub fn Snake(
         }
 
         // render the entire game (slower, but fewer bytes)
-        pub fn renderArena(self: *Self, screen: *[area]u8) void {
+        pub fn renderArena(self: *const Self, noalias screen: *[area]u8) void {
             // clear the screen
             @memset(screen, '.');
             // draw the score
             @memcpy(screen[0..4], "Len:");
-            tools.u32Conv(self.length - 1, @ptrCast(screen[5..]));
+            const score = self.length - food_add;
+            tools.u32Conv(score, screen[0..dim_x]);
             // render the snake
             for (screen, self.grid) |*elem, cell| {
                 if (cell > 0) elem.* = 'a';
@@ -82,7 +83,7 @@ pub fn Snake(
         }
 
         // returns true if it will crash into a wall
-        fn wallHit(self: *Self) bool {
+        fn wallHit(self: *const Self) bool {
             const head_x = self.head % dim_x;
             const head_y = self.head / dim_x;
             return switch (self.dir) {
