@@ -1,0 +1,11 @@
+.{
+    .name = "micro_snake",
+    .version = "0.6.0",
+    .dependencies = .{},
+
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "src",
+    },
+}
