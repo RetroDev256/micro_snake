@@ -23,7 +23,7 @@ pub fn Snake(
             return .{
                 .head = head,
                 .dir = .Right,
-                .length = 1,
+                .length = food_add,
                 .food = head + (dim_x / 3),
                 .grid = grid,
             };
@@ -51,13 +51,15 @@ pub fn Snake(
 
         // render the entire game (slower, but fewer bytes)
         pub fn renderArena(self: *Self, screen: *[area]u8) void {
-            for (screen) |*cell| cell.* = '.';
+            // clear the screen
+            @memset(screen, '.');
+            // draw the score
             @memcpy(screen[0..4], "Len:");
             tools.u32Conv(self.length - 1, @ptrCast(screen[5..]));
+            // render the snake
             for (screen, self.grid) |*elem, cell| {
-                if (cell > 0) {
-                    elem.* = '@';
-                }
+                if (cell > 0) elem.* = 'a';
+                if (cell == self.length) elem.* = '@';
             }
             screen[self.food] = '+';
         }

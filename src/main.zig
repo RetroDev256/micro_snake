@@ -5,7 +5,7 @@ const io = @import("io.zig");
 const snake = @import("snake.zig");
 const tools = @import("tools.zig");
 
-// override the default panic handler, make teeny :)
+// override the default panic handler, make teeny :D
 pub fn panic(_: []const u8, _: ?*std.builtin.StackTrace, _: ?usize) noreturn {
     @setCold(true);
     @trap();
@@ -41,7 +41,7 @@ pub export fn _start() callconv(.C) noreturn {
 
 // for when the game initially starts up
 fn banner(comptime dim_x: usize, comptime dim_y: usize, screen: []u8) void {
-    const message: []const u8 = "µ-Snek!";
+    const message = "µ-Snek!";
     const message_x: usize = dim_x / 2 - message.len / 2;
     const offset: usize = message_x + (dim_y / 2) * dim_x;
     @memcpy(screen[offset..][0..message.len], message);
