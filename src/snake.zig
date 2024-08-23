@@ -11,28 +11,23 @@ pub fn Snake(
     return struct {
         const Self = @This();
 
+        dir: Direction = .Right,
+        length: u32 = food_add,
         head: u32,
-        dir: Direction,
-        length: u32,
         food: u32,
         grid: *[area]u32,
 
         // initialize the snake and environment
         pub fn init(grid: *[area]u32) Self {
-            const head: u32 = (dim_x / 3) + (dim_y / 2) * dim_x;
-            return .{
-                .head = head,
-                .dir = .Right,
-                .length = food_add,
-                .food = head + (dim_x / 3),
-                .grid = grid,
-            };
+            const head: u32 = (dim_x / 3) + (dim_y / 3) * dim_x;
+            const food: u32 = 2 * (dim_x / 3) + 2 * (dim_y / 3) * dim_x;
+            return .{ .head = head, .food = food, .grid = grid };
         }
 
-        // returns true if a collision occurs
+        // returns false if a collision occurs
         pub fn move(self: *Self) bool {
-            self.dir = dir.get_dir(self.dir);
-            self.updateGrid();
+            self.dir = dir.getDirection(self.dir);
+            self.subGrid(); // move the snake along
             if (!self.wallHit()) {
                 switch (self.dir) {
                     .Up => self.head -= dim_x,
@@ -55,18 +50,18 @@ pub fn Snake(
             @memset(screen, '.');
             // draw the score
             @memcpy(screen[0..4], "Len:");
-            const score = self.length - food_add;
-            tools.u32Conv(score, screen[0..dim_x]);
+            const score_area = screen[5..][0..6];
+            tools.u32Conv(self.length, score_area);
             // render the snake
             for (screen, self.grid) |*elem, cell| {
-                if (cell > 0) elem.* = 'a';
+                if (cell > 0) elem.* = 'o';
                 if (cell == self.length) elem.* = '@';
             }
             screen[self.food] = '+';
         }
 
-        // updates the grid
-        fn updateGrid(self: *Self) void {
+        // simply moves the snake
+        fn subGrid(self: *Self) void {
             for (self.grid) |*cell| {
                 cell.* -|= 1;
             }
