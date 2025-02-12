@@ -138,6 +138,7 @@ pub fn u32Conv(val: u32, buf: []u8) void {
 
 const Snake = struct {
     head: u32,
+    food: u32,
     dir: Dir,
     length: u32,
     grid: *[area]u32,
@@ -153,8 +154,7 @@ const Snake = struct {
         snake.grid = grid;
         @memset(snake.grid, 0);
 
-        const food_pos = 2 * (width / 3) + 2 * (height / 3) * width;
-        snake.grid[food_pos] = 0xFFFF_FFFF; // This represents food
+        snake.food = 2 * (width / 3) + 2 * (height / 3) * width;
 
         return snake;
     }
@@ -179,10 +179,12 @@ const Snake = struct {
             .left => self.head -= 1,
         }
 
-        if (self.grid[self.head] > self.length) {
+        if (self.head == self.food) {
             // you hit food!
             self.length += food_add;
-            self.updateFood();
+            while (self.grid[self.food] != 0) {
+                self.food = rand() % area;
+            }
         } else if (self.grid[self.head] == 0) {
             // you didn't hit anything!
             self.grid[self.head] = self.length;
@@ -208,17 +210,6 @@ const Snake = struct {
             if (cell > 0) elem.* = 'o';
             if (cell == self.length) elem.* = '@';
             if (cell > self.length) elem.* = '+';
-        }
-    }
-
-    // updates the position of the food
-    fn updateFood(self: *Snake) void {
-        while (true) {
-            const food_pos = rand() % area;
-            if (self.grid[food_pos] == 0) {
-                self.grid[food_pos] = 0xFFFF_FFFF;
-                return;
-            }
         }
     }
 
