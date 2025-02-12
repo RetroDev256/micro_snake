@@ -1,47 +1,39 @@
-const linux = @import("std").os.linux;
+const std = @import("std");
+const assert = std.debug.assert;
+const linux = std.os.linux;
 
 // Disable character echo & line buffering
 // doesn't save old settings, so not reversible
-pub fn cbreakMode() void {
+pub fn enable_raw() void {
     var termios: linux.termios = undefined;
-    _ = linux.tcgetattr(0, &termios);
-    termios.cc[@intFromEnum(linux.V.MIN)] = 0; // nonblocking input
-    termios.lflag &= ~(linux.ICANON | linux.ECHO);
-    _ = linux.tcsetattr(0, .FLUSH, &termios);
-}
-
-// returns the old termios so you can restore things
-pub fn enable_raw() linux.termios {
-    var old: linux.termios = undefined;
-    _ = linux.tcgetattr(0, &old);
-    var new: linux.termios = old;
-    new.cc[@intFromEnum(linux.V.MIN)] = 0; // nonblocking input
-    new.lflag.ICANON = false; // disable buffering
-    new.lflag.ECHO = false; // disable echo
-    set_term(new); // apply edits to terminal
-    return old;
-}
-
-// resets the terminal from the return value of enable_raw
-pub fn set_term(new: linux.termios) void {
-    _ = linux.tcsetattr(0, linux.TCSA.NOW, &new);
+    assert(linux.tcgetattr(0, &termios) == 0);
+    termios.cc[@intFromEnum(linux.V.MIN)] = 0;
+    termios.lflag.ICANON = false;
+    assert(linux.tcsetattr(0, .FLUSH, &termios) == 0);
 }
 
 // flushes a buffer to the screen, adding
 // newlines and positioning at top right corner
 pub fn drawBuffer(comptime dim_x: usize, comptime dim_y: usize, buf: []const u8) void {
-    const top_right = "\x1B[1;1H";
-    _ = linux.write(1, top_right.ptr, top_right.len);
+    const top_right = "\x1B[H";
+    putstr(top_right.ptr, top_right.len);
     for (0..dim_y) |y| {
-        const line = buf[y * dim_x ..][0..dim_x];
-        _ = linux.write(1, line.ptr, line.len);
-        _ = linux.write(1, "\n", 1);
+        const line = buf[y * dim_x ..];
+        putstr(line.ptr, dim_x);
+        putstr("\n", 1);
     }
 }
 
-// get a keypress from STDIN
-pub fn getch() u8 {
-    var input: u8 = 0;
-    _ = linux.read(0, @ptrCast(&input), 1);
-    return input;
+// Print a string at cursor - can fail, but likely won't
+fn putstr(str: [*]const u8, comptime len: usize) void {
+    assert(linux.write(1, str, len) == len);
+}
+
+// get a keypress from STDIN - silent on no input
+pub fn getch() ?u8 {
+    var key: u8 = undefined;
+    const return_value = linux.read(0, @ptrCast(&key), 1);
+    if (return_value == 0) return null;
+    assert(return_value == 1);
+    return key;
 }

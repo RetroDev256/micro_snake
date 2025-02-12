@@ -1,6 +1,6 @@
 const dir = @import("dir.zig");
 const tools = @import("tools.zig");
-const Direction = dir.Direction;
+const Dir = dir.Dir;
 
 pub fn Snake(
     comptime food_add: u32,
@@ -11,7 +11,7 @@ pub fn Snake(
     return struct {
         const Self = @This();
 
-        dir: Direction = .Right,
+        dir: Dir = .right,
         length: u32 = food_add,
         head: u32,
         food: u32,
@@ -26,14 +26,14 @@ pub fn Snake(
 
         // returns false if a collision occurs
         pub fn move(self: *Self) bool {
-            self.dir = dir.getDirection(self.dir);
+            self.dir = dir.getDir(self.dir);
             self.subGrid(); // move the snake along
             if (!self.wallHit()) {
                 switch (self.dir) {
-                    .Up => self.head -= dim_x,
-                    .Down => self.head += dim_x,
-                    .Right => self.head += 1,
-                    .Left => self.head -= 1,
+                    .up => self.head -= dim_x,
+                    .down => self.head += dim_x,
+                    .right => self.head += 1,
+                    .left => self.head -= 1,
                 }
                 if (self.grid[self.head] == 0) {
                     self.grid[self.head] = self.length;
@@ -45,13 +45,13 @@ pub fn Snake(
         }
 
         // render the entire game (slower, but fewer bytes)
-        pub fn renderArena(self: *const Self, noalias screen: *[area]u8) void {
+        pub fn renderArena(self: *const Self, screen: *[area]u8) void {
             // clear the screen
             @memset(screen, '.');
             // draw the score
             @memcpy(screen[0..4], "Len:");
-            const score_area = screen[5..][0..6];
-            tools.u32Conv(self.length, score_area);
+            // Render the score (max 6 digits) at index 5 on the screen
+            tools.u32Conv(self.length, screen[5..][0..6]);
             // render the snake
             for (screen, self.grid) |*elem, cell| {
                 if (cell > 0) elem.* = 'o';
@@ -82,10 +82,10 @@ pub fn Snake(
             const head_x = self.head % dim_x;
             const head_y = self.head / dim_x;
             return switch (self.dir) {
-                .Down => head_y == dim_y - 1,
-                .Left => head_x == 0,
-                .Right => head_x == dim_x - 1,
-                .Up => head_y == 0,
+                .down => head_y == dim_y - 1,
+                .left => head_x == 0,
+                .right => head_x == dim_x - 1,
+                .up => head_y == 0,
             };
         }
     };

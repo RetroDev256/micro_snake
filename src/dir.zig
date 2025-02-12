@@ -1,15 +1,13 @@
 const io = @import("io.zig");
-pub const Direction = enum(u2) { Up, Down, Right, Left };
+pub const Dir = enum { up, down, right, left };
 
 // get a character if there is one to be read
 // return the direction it represents, if it does.
-pub fn getDirection(last: Direction) Direction {
-    while (true) {
-        const input = io.getch();
-        if (input == 0) break;
-        const subbed = input -% 'A';
+pub fn getDir(last: Dir) Dir {
+    while (io.getch()) |key| {
+        const subbed = key -% 'A';
         if (subbed < 4) {
-            const dir_read: Direction = @enumFromInt(subbed);
+            const dir_read: Dir = @enumFromInt(subbed);
             if (blockDir(last) != dir_read) {
                 return dir_read;
             }
@@ -18,11 +16,11 @@ pub fn getDirection(last: Direction) Direction {
     return last;
 }
 
-fn blockDir(a: Direction) Direction {
+fn blockDir(a: Dir) Dir {
     return switch (a) {
-        .Up => .Down,
-        .Down => .Up,
-        .Right => .Left,
-        .Left => .Right,
+        .up => .down,
+        .down => .up,
+        .right => .left,
+        .left => .right,
     };
 }

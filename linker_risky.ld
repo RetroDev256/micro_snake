@@ -1,7 +1,8 @@
+/* This is a linker script to make tiny, but possibly INCORRECT programs */
 ENTRY(_start)
  
 PHDRS {
-  text PT_LOAD;
+  text PT_LOAD; /* RWX */
 }
 
 SECTIONS {

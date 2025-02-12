@@ -1,5 +1,9 @@
 const std = @import("std");
 
+// -Drelease for release build
+// -Drisky for slighty smaller (but risky) build
+// shrink for slighyl smaller output (safe, repends on sstrip from elf-kickers and wc)
+
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{
         // the x86 ELF is generally smaller
@@ -20,9 +24,14 @@ pub fn build(b: *std.Build) !void {
     // optimize
     if (optimize == .ReleaseFast or optimize == .ReleaseSmall) {
         // custom linker script
-        exe.setLinkerScript(b.path("linker.ld"));
+        const risky = b.option(bool, "risky", "Create binary with PHDR which is RWX") orelse false;
+        exe.setLinkerScript(b.path(if (risky) "linker_risky.ld" else "linker_safe.ld"));
         // toggle compiler options
-        standardOptimize(exe);
+        exe.link_data_sections = true;
+        exe.link_function_sections = true;
+        exe.root_module.strip = true;
+        exe.root_module.single_threaded = true;
+        exe.bundle_compiler_rt = false;
         // further strip & stuff
         try furtherOptimize(b, exe); // "shrink" step
     }
@@ -43,38 +52,6 @@ pub fn build(b: *std.Build) !void {
     const run_exe_unit_tests = b.addRunArtifact(exe_unit_tests);
     const test_step = b.step("test", "Run unit tests");
     test_step.dependOn(&run_exe_unit_tests.step);
-}
-
-fn standardOptimize(exe: *std.Build.Step.Compile) void {
-    // general stuff
-    exe.root_module.strip = true;
-    exe.root_module.error_tracing = false;
-    exe.root_module.unwind_tables = false;
-    exe.root_module.omit_frame_pointer = true;
-    exe.root_module.pic = false;
-    exe.root_module.single_threaded = true;
-    exe.root_module.sanitize_thread = false;
-    exe.root_module.stack_protector = false;
-    exe.root_module.stack_check = false;
-    exe.root_module.red_zone = false;
-    exe.root_module.code_model = .small;
-    exe.root_module.sanitize_c = false;
-    exe.formatted_panics = false;
-    // garbage collect stuff
-    exe.link_function_sections = true;
-    exe.link_data_sections = true;
-    exe.link_gc_sections = true;
-    exe.dead_strip_dylibs = true;
-    // linker magic
-    exe.linkage = .static;
-    exe.link_z_notext = false;
-    exe.link_z_lazy = false;
-    exe.link_z_relro = true;
-    exe.link_eh_frame_hdr = true;
-    exe.linker_allow_shlib_undefined = true;
-    exe.linker_enable_new_dtags = true;
-    exe.shared_memory = false;
-    exe.rdynamic = false;
 }
 
 fn furtherOptimize(b: *std.Build, exe: *std.Build.Step.Compile) !void {
