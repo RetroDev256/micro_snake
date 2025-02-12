@@ -2,7 +2,8 @@
 
 Attempt to create a workable, standalone linux console game - snake - in less than 1 KiB
 
-![image](https://github.com/user-attachments/assets/f9002d61-60dd-4bd4-bbba-7de2870792be)
+![image](https://github.com/user-attachments/assets/83ee2d25-6d1f-4a90-b75d-0344b281d9cc)
+
 
 ```
 ┌────────┬─────────────────────────┬─────────────────────────┬────────┬────────┐
