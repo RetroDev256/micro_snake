@@ -6,9 +6,14 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) !void {
     const target = b.standardTargetOptions(.{
-        // the x86 ELF is generally smaller
-        // the pointers are also 32 bits shorter ;D
-        .default_target = .{ .cpu_arch = .x86, .cpu_model = .baseline },
+        // x86 ELF is generally smaller, half the bits for pointers
+        // The i386 target is very minimal, and avoids bloated SIMD
+        .default_target = .{
+            .cpu_arch = .x86,
+            .cpu_model = .{
+                .explicit = &std.Target.x86.cpu.i386,
+            },
+        },
     });
     const optimize = b.standardOptimizeOption(.{
         .preferred_optimize_mode = .ReleaseSmall,
@@ -31,7 +36,6 @@ pub fn build(b: *std.Build) !void {
         exe.link_function_sections = true;
         exe.root_module.strip = true;
         exe.root_module.single_threaded = true;
-        exe.bundle_compiler_rt = false;
         // further strip & stuff
         try furtherOptimize(b, exe); // "shrink" step
     }

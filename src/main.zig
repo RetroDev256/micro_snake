@@ -5,13 +5,6 @@ const io = @import("io.zig");
 const snake = @import("snake.zig");
 const tools = @import("tools.zig");
 
-pub const panic = std.debug.no_panic;
-
-export fn memset(dest: ?[*]u8, c: u8, len: usize) callconv(.C) ?[*]u8 {
-    for (dest.?[0..len]) |*d| d.* = c;
-    return dest;
-}
-
 pub export fn _start() callconv(.C) noreturn {
     io.enable_raw();
 
