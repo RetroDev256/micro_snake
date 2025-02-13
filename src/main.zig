@@ -13,7 +13,6 @@ pub export fn _start() callconv(.C) noreturn {
 
     var screen: [area]u8 = undefined;
     var grid: [area]u32 = undefined;
-    @memset(&screen, ' ');
     banner(&screen);
 
     while (true) {
@@ -28,10 +27,11 @@ pub export fn _start() callconv(.C) noreturn {
 }
 
 // for when the game initially starts up
-fn banner(screen: []u8) void {
+fn banner(screen: *[area]u8) void {
     const message = "µ-Snek!";
     const message_x: usize = width / 2 - message.len / 2;
     const offset: usize = message_x + (height / 2) * width;
+    @memset(screen, ' ');
     @memcpy(screen[offset..][0..message.len], message);
     drawBuffer(screen);
     sleep(std.time.ns_per_ms * 750);
@@ -73,10 +73,10 @@ pub fn getDir(last: Dir) Dir {
 
 fn blockDir(a: Dir) Dir {
     return switch (a) {
+        .left => .right,
+        .right => .left,
         .up => .down,
         .down => .up,
-        .right => .left,
-        .left => .right,
     };
 }
 
@@ -93,8 +93,7 @@ pub fn enableRawMode() void {
 // flushes a buffer to the screen, adding
 // newlines and positioning at top right corner
 pub fn drawBuffer(buf: []const u8) void {
-    const top_right = "\x1B[H";
-    putstr(top_right.ptr, top_right.len);
+    putstr("\x1B[H", 3);
     for (0..height) |y| {
         const line = buf[y * width ..];
         putstr(line.ptr, width);
@@ -145,18 +144,14 @@ const Snake = struct {
 
     // initialize the snake and environment
     pub fn init(grid: *[area]u32) Snake {
-        var snake: Snake = undefined;
-
-        snake.head = (width / 3) + (height / 3) * width;
-        snake.dir = .right;
-        snake.length = food_add;
-
-        snake.grid = grid;
-        @memset(snake.grid, 0);
-
-        snake.food = 2 * (width / 3) + 2 * (height / 3) * width;
-
-        return snake;
+        @memset(grid, 0);
+        return .{
+            .head = (width / 3) + (height / 3) * width,
+            .food = 2 * (width / 3) + 2 * (height / 3) * width,
+            .dir = .right,
+            .length = food_add,
+            .grid = grid,
+        };
     }
 
     // returns false if a collision occurs
