@@ -179,6 +179,14 @@ const Snake = struct {
             .left => self.head -= 1,
         }
 
+        if (self.grid[self.head] == 0) {
+            // you didn't hit anything!
+            self.grid[self.head] = self.length;
+        } else {
+            // you hit yourself, nitwit!
+            return false;
+        }
+
         if (self.head == self.food) {
             // you hit food!
             self.length += food_add;
@@ -186,14 +194,6 @@ const Snake = struct {
                 self.food = rand() % area;
                 if (self.grid[self.food] == 0) break;
             }
-        }
-
-        if (self.grid[self.head] == 0) {
-            // you didn't hit anything!
-            self.grid[self.head] = self.length;
-        } else {
-            // you hit yourself, nitwit!
-            return false;
         }
 
         return true;
@@ -209,8 +209,11 @@ const Snake = struct {
         u32Conv(self.length, screen[5..][0..4]);
         // render the snake
         for (screen, self.grid) |*elem, cell| {
-            if (cell > 0) elem.* = 'o';
-            if (cell == self.length) elem.* = '@';
+            if (cell == self.length) {
+                elem.* = '@';
+            } else if (cell > 0) {
+                elem.* = 'o';
+            }
         }
         screen[self.food] = '+';
     }
