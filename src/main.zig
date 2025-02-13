@@ -159,7 +159,7 @@ const Snake = struct {
         return snake;
     }
 
-    // returns true if a collision occurs
+    // returns false if a collision occurs
     pub fn move(self: *Snake) bool {
         self.dir = getDir(self.dir);
 
@@ -168,7 +168,7 @@ const Snake = struct {
 
         if (self.wallHit()) {
             // you done goofed
-            return true;
+            return false;
         }
 
         // move the snake's head position
@@ -182,18 +182,21 @@ const Snake = struct {
         if (self.head == self.food) {
             // you hit food!
             self.length += food_add;
-            while (self.grid[self.food] != 0) {
+            while (true) {
                 self.food = rand() % area;
+                if (self.grid[self.food] == 0) break;
             }
-        } else if (self.grid[self.head] == 0) {
+        }
+
+        if (self.grid[self.head] == 0) {
             // you didn't hit anything!
             self.grid[self.head] = self.length;
         } else {
             // you hit yourself, nitwit!
-            return true;
+            return false;
         }
 
-        return false;
+        return true;
     }
 
     // render the entire game (slower, but fewer bytes)
@@ -201,16 +204,15 @@ const Snake = struct {
     pub fn renderArena(self: Snake, screen: *[area]u8) void {
         // clear the screen
         @memset(screen, '.');
-        // draw the score
+        // render the score
         @memcpy(screen[0..4], "Len:");
-        // Render the score (max 6 digits) at index 5 on the screen
-        u32Conv(self.length, screen[5..][0..6]);
+        u32Conv(self.length, screen[5..][0..4]);
         // render the snake
         for (screen, self.grid) |*elem, cell| {
             if (cell > 0) elem.* = 'o';
             if (cell == self.length) elem.* = '@';
-            if (cell > self.length) elem.* = '+';
         }
+        screen[self.food] = '+';
     }
 
     // returns true if it will crash into a wall
