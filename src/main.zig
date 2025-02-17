@@ -18,40 +18,27 @@ export fn memset(dest: ?[*]u8, c: u8, len: usize) ?[*]u8 {
 pub export fn _start() noreturn {
     enableRawMode();
 
-    var screen: [area]u8 = undefined;
-    var grid: [area]u32 = undefined;
-    banner(&screen);
-
     while (true) {
+        var screen: [area]u8 = undefined;
+        var grid: [area]u32 = undefined;
+        banner(&screen);
+
         var snake: Snake = .init(&grid);
         while (snake.move()) {
             snake.renderArena(&screen);
             drawBuffer(&screen);
             sleep(std.time.ns_per_ms * 75);
         }
-        deathAnim(&screen);
     }
 }
 
-// for when the game initially starts up
+// transition screen for the start of the game, and death
 fn banner(screen: *[area]u8) void {
-    const message = "µ-Snek!";
-    const message_x: usize = width / 2 - message.len / 2;
-    const offset: usize = message_x + (height / 2) * width;
-    @memset(screen, ' ');
-    @memcpy(screen[offset..][0..message.len], message);
-    drawBuffer(screen);
-    sleep(std.time.ns_per_ms * 750);
-}
-
-// for when the snake dies
-fn deathAnim(screen: []u8) void {
-    for (0..area * 2) |_| {
-        const x = rand();
-        const place: u32 = x % (area);
-        const char: u32 = (x % 64) + 32;
-        screen[place] = @intCast(char);
+    const msg = "u-Snek!";
+    for (0..area) |i| {
+        screen[i] = msg[i % msg.len];
         drawBuffer(screen);
+        sleep(std.time.ns_per_ms);
     }
 }
 
@@ -126,9 +113,7 @@ pub fn getch() ?u8 {
 // dead simple PRNG
 var prng: u32 = 1;
 pub fn rand() u32 {
-    prng ^= prng << 13;
-    prng ^= prng >> 17;
-    prng ^= prng << 5;
+    prng = (prng *% 69069) +% 1;
     return prng;
 }
 
@@ -207,9 +192,10 @@ const Snake = struct {
     pub fn renderArena(self: Snake, screen: *[area]u8) void {
         // clear the screen
         @memset(screen, '.');
-        // render the score
-        @memcpy(screen[0..4], "Len:");
-        u32Conv(self.length, screen[5..][0..4]);
+
+        // render the score (bottom right)
+        u32Conv(self.length, screen);
+
         // render the snake
         for (screen, self.grid) |*elem, cell| {
             if (cell == self.length) {
@@ -218,6 +204,8 @@ const Snake = struct {
                 elem.* = 'o';
             }
         }
+
+        // render the food
         screen[self.food] = '+';
     }
 
