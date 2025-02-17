@@ -8,7 +8,7 @@ const width = 80; // width of terminal
 const height = 25; // height of terminal
 const area = width * height;
 
-export fn memset(dest: ?[*]u8, c: u8, len: usize) callconv(.c) ?[*]u8 {
+export fn memset(dest: ?[*]u8, c: u8, len: usize) ?[*]u8 {
     for (0..len) |i| {
         dest.?[i] = c;
     }
@@ -101,17 +101,17 @@ pub fn enableRawMode() void {
 // flushes a buffer to the screen, adding
 // newlines and positioning at top right corner
 pub fn drawBuffer(buf: []const u8) void {
-    putstr("\x1B[H", 3);
+    putstr("\x1B[H");
     for (0..height) |y| {
-        const line = buf[y * width ..];
-        putstr(line.ptr, width);
-        putstr("\n", 1);
+        const line_start = buf[y * width ..];
+        putstr(line_start[0..width]);
+        putstr("\n");
     }
 }
 
 // Print a string at cursor - can fail, but likely won't
-fn putstr(str: [*]const u8, comptime len: usize) void {
-    assert(linux.write(1, str, len) == len);
+fn putstr(str: []const u8) void {
+    assert(linux.write(1, str.ptr, str.len) == str.len);
 }
 
 // get a keypress from STDIN - silent on no input
