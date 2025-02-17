@@ -57,6 +57,7 @@ fn deathAnim(screen: []u8) void {
 
 // shortcut for sleeping
 fn sleep(comptime ns: isize) void {
+    comptime assert(ns < std.time.ns_per_s);
     const delay: timespec = .{ .sec = 0, .nsec = ns };
     _ = linux.nanosleep(&delay, null);
 }
