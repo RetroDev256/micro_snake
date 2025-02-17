@@ -5,7 +5,7 @@ const timespec = linux.timespec;
 
 const food_add = 5; // snake increase from food
 const width = 80; // width of terminal
-const height = 25; // height of terminal
+const height = 24; // height of terminal
 const area = width * height;
 
 export fn memset(dest: ?[*]u8, c: u8, len: usize) ?[*]u8 {
