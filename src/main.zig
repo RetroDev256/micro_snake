@@ -8,7 +8,14 @@ const width = 80; // width of terminal
 const height = 25; // height of terminal
 const area = width * height;
 
-pub export fn _start() callconv(.C) noreturn {
+export fn memset(dest: ?[*]u8, c: u8, len: usize) callconv(.c) ?[*]u8 {
+    for (0..len) |i| {
+        dest.?[i] = c;
+    }
+    return dest;
+}
+
+pub export fn _start() noreturn {
     enableRawMode();
 
     var screen: [area]u8 = undefined;
@@ -43,7 +50,7 @@ fn deathAnim(screen: []u8) void {
         const x = rand();
         const place: u32 = x % (area);
         const char: u32 = (x % 64) + 32;
-        screen[place] = @truncate(char);
+        screen[place] = @intCast(char);
         drawBuffer(screen);
     }
 }
