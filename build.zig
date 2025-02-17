@@ -36,6 +36,7 @@ pub fn build(b: *std.Build) !void {
         exe.link_function_sections = true;
         exe.root_module.strip = true;
         exe.root_module.single_threaded = true;
+        exe.root_module.omit_frame_pointer = true;
         exe.bundle_compiler_rt = false;
         exe.no_builtin = true;
         // further strip & stuff
