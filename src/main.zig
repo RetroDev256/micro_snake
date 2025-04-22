@@ -8,13 +8,6 @@ const width = 80; // width of terminal
 const height = 24; // height of terminal
 const area = width * height;
 
-export fn memset(dest: ?[*]u8, c: u8, len: usize) ?[*]u8 {
-    for (0..len) |i| {
-        dest.?[i] = c;
-    }
-    return dest;
-}
-
 pub export fn _start() noreturn {
     enableRawMode();
 
