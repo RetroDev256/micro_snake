@@ -19,27 +19,26 @@ pub export fn _start() noreturn {
     enableRawMode();
 
     while (true) {
-        var screen: [area]u8 = undefined;
         var grid: [area]u32 = undefined;
-        banner(&screen);
+        banner();
 
         var snake: Snake = .init(&grid);
         while (snake.move()) {
-            snake.renderArena(&screen);
-            drawBuffer(&screen);
+            snake.renderArena();
             sleep(std.time.ns_per_ms * 75);
         }
     }
 }
 
 // transition screen for the start of the game, and death
-fn banner(screen: *[area]u8) void {
-    const msg = "u-Snek!";
-    for (0..area) |i| {
-        screen[i] = msg[i % msg.len];
-        drawBuffer(screen);
-        sleep(std.time.ns_per_ms);
-    }
+fn banner() void {
+    const message = "μ-Snek!";
+    const ansi = std.fmt.comptimePrint(
+        "\x1B[2J\x1B[{};{}H",
+        .{ height / 2, (width / 2) - (message.len / 2) },
+    );
+    putstr(ansi ++ message);
+    sleep(std.time.ns_per_ms * 850);
 }
 
 // shortcut for sleeping
@@ -85,17 +84,6 @@ pub fn enableRawMode() void {
     assert(linux.tcsetattr(0, .FLUSH, &termios) == 0);
 }
 
-// flushes a buffer to the screen, adding
-// newlines and positioning at top right corner
-pub fn drawBuffer(buf: []const u8) void {
-    putstr("\x1B[H");
-    for (0..height) |y| {
-        const line_start = buf[y * width ..];
-        putstr(line_start[0..width]);
-        putstr("\n");
-    }
-}
-
 // Print a string at cursor - can fail, but likely won't
 fn putstr(str: []const u8) void {
     assert(linux.write(1, str.ptr, str.len) == str.len);
@@ -111,10 +99,10 @@ pub fn getch() ?u8 {
 }
 
 // dead simple PRNG
-var prng: u32 = 1;
+var prng_state: u32 = 1;
 pub fn rand() u32 {
-    prng = (prng *% 69069) +% 1;
-    return prng;
+    prng_state = (prng_state *% 69069) +% 1;
+    return prng_state;
 }
 
 // convert u32 to string representation
@@ -189,24 +177,32 @@ const Snake = struct {
 
     // render the entire game (slower, but fewer bytes)
     // TODO: investigate *const Snake for self
-    pub fn renderArena(self: Snake, screen: *[area]u8) void {
-        // clear the screen
-        @memset(screen, '.');
-
-        // render the score (bottom right)
-        u32Conv(self.length, screen);
+    pub fn renderArena(self: Snake) void {
+        // Move to top left
+        putstr("\x1B[H");
 
         // render the snake
-        for (screen, self.grid) |*elem, cell| {
-            if (cell == self.length) {
-                elem.* = '@';
+        var idx: usize = 0;
+        while (idx < area) {
+            const cell = self.grid[idx];
+
+            // Empty cells are '.' by default
+            var char: u8 = '.';
+            if (idx == self.food) {
+                char = '+';
+            } else if (cell == self.length) {
+                char = '@';
             } else if (cell > 0) {
-                elem.* = 'o';
+                char = 'o';
+            }
+            putstr(&.{char});
+
+            // Add a newline after each line
+            idx += 1;
+            if (idx % width == 0) {
+                putstr("\n");
             }
         }
-
-        // render the food
-        screen[self.food] = '+';
     }
 
     // returns true if it will crash into a wall
