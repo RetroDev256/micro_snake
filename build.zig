@@ -39,7 +39,6 @@ pub fn build(b: *std.Build) !void {
         // Actually increases size for x86:
         // exe.root_module.omit_frame_pointer = true;
         exe.bundle_compiler_rt = false;
-        exe.no_builtin = true;
         // further strip & stuff
         try furtherOptimize(b, exe); // "shrink" step
     }
