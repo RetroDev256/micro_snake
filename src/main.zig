@@ -169,8 +169,7 @@ const Snake = struct {
     }
 
     // render the entire game (slower, but fewer bytes)
-    // TODO: investigate *const Snake for self
-    pub fn renderArena(self: Snake) void {
+    pub fn renderArena(self: *const Snake) void {
         // Move to top left
         putstr("\x1B[H");
 
