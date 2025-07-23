@@ -41,11 +41,11 @@ fn sleep(comptime ns: isize) void {
     _ = linux.nanosleep(&delay, null);
 }
 
-pub const Dir = enum { up, down, right, left };
+const Dir = enum { up, down, right, left };
 
 // get a character if there is one to be read
 // return the direction it represents, if it does.
-pub fn getDir(last: Dir) Dir {
+fn getDir(last: Dir) Dir {
     while (getch()) |key| {
         const subbed = key -% 'A';
         if (subbed < 4) {
@@ -69,7 +69,7 @@ fn blockDir(a: Dir) Dir {
 
 // Disable character echo & line buffering
 // doesn't save old settings, so not reversible
-pub fn enableRawMode() void {
+fn enableRawMode() void {
     var termios: linux.termios = undefined;
     assert(linux.tcgetattr(0, &termios) == 0);
     termios.cc[@intFromEnum(linux.V.MIN)] = 0;
@@ -83,7 +83,7 @@ fn putstr(str: []const u8) void {
 }
 
 // get a keypress from STDIN - silent on no input
-pub fn getch() ?u8 {
+fn getch() ?u8 {
     var key: u8 = undefined;
     const return_value = linux.read(0, @ptrCast(&key), 1);
     if (return_value == 0) return null;
@@ -93,13 +93,13 @@ pub fn getch() ?u8 {
 
 // dead simple PRNG
 var prng_state: u32 = 1;
-pub fn rand() u32 {
+fn rand() u32 {
     prng_state = (prng_state *% 69069) +% 1;
     return prng_state;
 }
 
 // convert u32 to string representation
-pub fn u32Conv(val: u32, buf: []u8) void {
+fn u32Conv(val: u32, buf: []u8) void {
     var conv: u32 = val;
     var i: usize = 0;
     while (conv > 0) : (i += 1) {
@@ -117,7 +117,7 @@ const Snake = struct {
     grid: *[area]u32,
 
     // initialize the snake and environment
-    pub fn init(grid: *[area]u32) Snake {
+    fn init(grid: *[area]u32) Snake {
         @memset(grid, 0);
         return .{
             .head = (width / 3) + (height / 3) * width,
@@ -129,7 +129,7 @@ const Snake = struct {
     }
 
     // returns false if a collision occurs
-    pub fn move(self: *Snake) bool {
+    fn move(self: *Snake) bool {
         self.dir = getDir(self.dir);
 
         // burn up those calories
@@ -169,12 +169,13 @@ const Snake = struct {
     }
 
     // render the entire game (slower, but fewer bytes)
-    pub fn renderArena(self: *const Snake) void {
+    fn renderArena(self: *const Snake) void {
         // Move to top left
         putstr("\x1B[H");
 
         // render the snake
         var idx: usize = 0;
+        var row: usize = 0;
         while (idx < area) {
             const cell = self.grid[idx];
 
@@ -191,7 +192,9 @@ const Snake = struct {
 
             // Add a newline after each line
             idx += 1;
-            if (idx % width == 0) {
+            row += 1;
+            if (row == width) {
+                row = 0;
                 putstr("\n");
             }
         }
