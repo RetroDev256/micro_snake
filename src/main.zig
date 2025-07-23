@@ -41,7 +41,7 @@ fn sleep(comptime ns: isize) void {
     _ = linux.nanosleep(&delay, null);
 }
 
-const Dir = enum { up, down, right, left };
+const Dir = enum(u32) { up, down, right, left };
 
 // get a character if there is one to be read
 // return the direction it represents, if it does.
