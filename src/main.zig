@@ -101,7 +101,7 @@ fn rand() u32 {
 // convert u32 to string representation
 fn u32Conv(val: u32, buf: []u8) void {
     var conv: u32 = val;
-    var i: usize = 0;
+    var i: u32 = 0;
     while (conv > 0) : (i += 1) {
         const digit: u8 = @intCast(conv % 10);
         buf[buf.len - (i + 1)] = '0' + digit;
@@ -174,8 +174,8 @@ const Snake = struct {
         putstr("\x1B[H");
 
         // render the snake
-        var idx: usize = 0;
-        var row: usize = 0;
+        var idx: u32 = 0;
+        var row: u32 = 0;
         while (idx < area) {
             const cell = self.grid[idx];
 
