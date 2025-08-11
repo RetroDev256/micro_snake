@@ -41,7 +41,7 @@ fn sleep(comptime ns: isize) void {
     _ = linux.nanosleep(&delay, null);
 }
 
-const Dir = enum(u32) { up, down, right, left };
+const Dir = enum(u32) { right, up, down, left };
 
 // get a character if there is one to be read
 // return the direction it represents, if it does.
@@ -85,9 +85,9 @@ fn putstr(str: []const u8) void {
 // get a keypress from STDIN - silent on no input
 fn getch() ?u8 {
     var key: u8 = undefined;
-    const return_value = linux.read(0, @ptrCast(&key), 1);
-    if (return_value == 0) return null;
-    assert(return_value == 1);
+    const read = linux.read(0, @ptrCast(&key), 1);
+    if (read == 0) return null;
+    assert(read == 1);
     return key;
 }
 
@@ -96,17 +96,6 @@ var prng_state: u32 = 1;
 fn rand() u32 {
     prng_state = (prng_state *% 69069) +% 1;
     return prng_state;
-}
-
-// convert u32 to string representation
-fn u32Conv(val: u32, buf: []u8) void {
-    var conv: u32 = val;
-    var i: u32 = 0;
-    while (conv > 0) : (i += 1) {
-        const digit: u8 = @intCast(conv % 10);
-        buf[buf.len - (i + 1)] = '0' + digit;
-        conv /= 10;
-    }
 }
 
 const Snake = struct {
