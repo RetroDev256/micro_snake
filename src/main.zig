@@ -1,7 +1,6 @@
 const std = @import("std");
 const assert = std.debug.assert;
 const linux = std.os.linux;
-const timespec = linux.timespec;
 
 const food_add = 5; // snake increase from food
 const width = 80; // width of terminal
@@ -12,12 +11,12 @@ pub export fn _start() noreturn {
     enableRawMode();
 
     while (true) {
-        var grid: [area]u32 = undefined;
         banner();
 
+        var grid: [area]u32 = undefined;
         var snake: Snake = .init(&grid);
         while (snake.move()) {
-            snake.renderArena();
+            renderArena(&grid, snake.food, snake.length);
             sleep(std.time.ns_per_ms * 75);
         }
     }
@@ -37,29 +36,28 @@ fn banner() void {
 // shortcut for sleeping
 fn sleep(comptime ns: isize) void {
     comptime assert(ns < std.time.ns_per_s);
-    const delay: timespec = .{ .sec = 0, .nsec = ns };
-    _ = linux.nanosleep(&delay, null);
+    const delay: linux.timespec = .{ .sec = 0, .nsec = ns };
+    _ = linux.nanosleep(&delay, undefined);
 }
 
-const Dir = enum(u32) { right, up, down, left };
+const Dir = enum(u32) { up, down, right, left };
 
 // get a character if there is one to be read
 // return the direction it represents, if it does.
-fn getDir(last: Dir) Dir {
-    while (getch()) |key| {
+fn getDir(last: *const Dir) Dir {
+    var key: u8 = undefined;
+    while (getch(&key) != 0) {
         const subbed = key -% 'A';
-        if (subbed < 4) {
-            const dir_read: Dir = @enumFromInt(subbed);
-            if (blockDir(last) != dir_read) {
-                return dir_read;
-            }
-        }
+        if (subbed >= 4) continue;
+        const read: Dir = @enumFromInt(subbed);
+        if (blockDir(last) == read) continue;
+        return read;
     }
-    return last;
+    return last.*;
 }
 
-fn blockDir(a: Dir) Dir {
-    return switch (a) {
+fn blockDir(a: *const Dir) Dir {
+    return switch (a.*) {
         .left => .right,
         .right => .left,
         .up => .down,
@@ -78,17 +76,17 @@ fn enableRawMode() void {
 }
 
 // Print a string at cursor - can fail, but likely won't
+// Normally I'd print to STDOUT, but STDERR saves 2 bytes
 fn putstr(str: []const u8) void {
-    assert(linux.write(1, str.ptr, str.len) == str.len);
+    assert(linux.write(2, str.ptr, str.len) == str.len);
 }
 
-// get a keypress from STDIN - silent on no input
-fn getch() ?u8 {
-    var key: u8 = undefined;
-    const read = linux.read(0, @ptrCast(&key), 1);
-    if (read == 0) return null;
-    assert(read == 1);
-    return key;
+// get a keypress from STDIN - return number of keys read
+fn getch(key: *u8) u32 {
+    switch (linux.read(0, key[0..1], 1)) {
+        0, 1 => |read| return read,
+        else => unreachable,
+    }
 }
 
 // dead simple PRNG
@@ -107,7 +105,7 @@ const Snake = struct {
 
     // initialize the snake and environment
     fn init(grid: *[area]u32) Snake {
-        @memset(grid, 0);
+        grid.* = @splat(0);
         return .{
             .head = (width / 3) + (height / 3) * width,
             .food = 2 * (width / 3) + 2 * (height / 3) * width,
@@ -119,12 +117,12 @@ const Snake = struct {
 
     // returns false if a collision occurs
     fn move(self: *Snake) bool {
-        self.dir = getDir(self.dir);
+        self.dir = getDir(&self.dir);
 
         // burn up those calories
         for (self.grid) |*cell| cell.* -|= 1;
 
-        if (self.wallHit()) {
+        if (wallHit(self.head, self.dir)) {
             // you done goofed
             return false;
         }
@@ -137,12 +135,12 @@ const Snake = struct {
             .left => self.head -= 1,
         }
 
-        if (self.grid[self.head] == 0) {
-            // you didn't hit anything!
-            self.grid[self.head] = self.length;
-        } else {
+        if (self.grid[self.head] != 0) {
             // you hit yourself, nitwit!
             return false;
+        } else {
+            // you didn't hit anything!
+            self.grid[self.head] = self.length;
         }
 
         if (self.head == self.food) {
@@ -156,48 +154,48 @@ const Snake = struct {
 
         return true;
     }
+};
 
-    // render the entire game (slower, but fewer bytes)
-    fn renderArena(self: *const Snake) void {
-        // Move to top left
-        putstr("\x1B[H");
+// render the entire game (slower, but fewer bytes)
+fn renderArena(grid: *[area]u32, food: u32, length: u32) void {
+    // Move to top left
+    putstr("\x1B[H");
 
-        // render the snake
-        var idx: u32 = 0;
-        var row: u32 = 0;
-        while (idx < area) {
-            const cell = self.grid[idx];
+    // render the snake
+    var idx: u32 = 0;
+    var row: u32 = 0;
+    while (idx < area) {
+        const cell = grid[idx];
 
-            // Empty cells are '.' by default
-            var char: u8 = '.';
-            if (idx == self.food) {
-                char = '+';
-            } else if (cell == self.length) {
-                char = '@';
-            } else if (cell > 0) {
-                char = 'o';
-            }
-            putstr(&.{char});
+        // Empty cells are '.' by default
+        var char: u8 = '.';
+        if (idx == food) {
+            char = '+';
+        } else if (cell == length) {
+            char = '@';
+        } else if (cell != 0) {
+            char = 'o';
+        }
+        putstr(&.{char});
 
-            // Add a newline after each line
-            idx += 1;
-            row += 1;
-            if (row == width) {
-                row = 0;
-                putstr("\n");
-            }
+        // Add a newline after each line
+        idx += 1;
+        row += 1;
+        if (row == width) {
+            row = 0;
+            putstr("\n");
         }
     }
+}
 
-    // returns true if it will crash into a wall
-    fn wallHit(self: Snake) bool {
-        const head_x = self.head % width;
-        const head_y = self.head / width;
-        return switch (self.dir) {
-            .down => head_y == height - 1,
-            .left => head_x == 0,
-            .right => head_x == width - 1,
-            .up => head_y == 0,
-        };
-    }
-};
+// returns true if it will crash into a wall
+fn wallHit(head: u32, dir: Dir) bool {
+    const head_x = head % width;
+    const head_y = head / width;
+    return switch (dir) {
+        .down => head_y == height - 1,
+        .left => head_x == 0,
+        .right => head_x == width - 1,
+        .up => head_y == 0,
+    };
+}
